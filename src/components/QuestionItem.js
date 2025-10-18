@@ -1,23 +1,36 @@
 import React from "react";
 
-function QuestionItem({ question }) {
+function QuestionItem({ question, onDeleteQuestion, onUpdateQuestion }) {
   const { id, prompt, answers, correctIndex } = question;
 
-  const options = answers.map((answer, index) => (
-    <option key={index} value={index}>
-      {answer}
-    </option>
-  ));
+  function handleDelete() {
+    fetch(`http://localhost:4000/questions/${id}`, { method: "DELETE" }).then(
+      () => onDeleteQuestion(id)
+    );
+  }
+
+  function handleChange(e) {
+    const updated = { ...question, correctIndex: parseInt(e.target.value) };
+    fetch(`http://localhost:4000/questions/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ correctIndex: updated.correctIndex }),
+    })
+      .then((r) => r.json())
+      .then((data) => onUpdateQuestion(data));
+  }
 
   return (
     <li>
-      <h4>Question {id}</h4>
-      <h5>Prompt: {prompt}</h5>
-      <label>
-        Correct Answer:
-        <select defaultValue={correctIndex}>{options}</select>
-      </label>
-      <button>Delete Question</button>
+      <h4>{prompt}</h4>
+      <select value={correctIndex} onChange={handleChange}>
+        {answers.map((a, i) => (
+          <option key={i} value={i}>
+            {a}
+          </option>
+        ))}
+      </select>
+      <button onClick={handleDelete}>Delete Question</button>
     </li>
   );
 }
